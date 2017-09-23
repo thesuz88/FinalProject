@@ -1,9 +1,9 @@
 package com.team180.controller;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import com.team180.DAO.HibernateDao;
 import com.team180.Encryption.PasswordMD5Encrypt;
 import com.team180.tables.EmployerListingEntity;
+import com.team180.util.HibernateUtil;
 import org.hibernate.Session;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,6 +20,7 @@ import java.util.List;
 public class EmployerController {
     public static EmployerListingEntity loggedInEmployer;
     private int id;
+    HibernateDao hd = new HibernateDao();
 
 
     @RequestMapping("/registerEmployer")
@@ -42,7 +42,7 @@ public class EmployerController {
                                          @RequestParam("contactEmail") String email, @RequestParam("jobDescription") String jDescription,
                                          @RequestParam("crimetype") String cType, @RequestParam("password") String password) {
 
-        Session s = HibernateDao.getSession();
+        Session s = HibernateUtil.getSession();
 
         EmployerListingEntity newEmployer = new EmployerListingEntity();
 
@@ -54,7 +54,7 @@ public class EmployerController {
         newEmployer.setCrimetype(cType);
 
 
-        ModelAndView alert = HibernateDao.validateEmail(email);
+        ModelAndView alert = hd.validateEmail(email);
         if (alert != null) {
             return alert;
         }
@@ -66,7 +66,7 @@ public class EmployerController {
         s.getTransaction().commit();
         s.close();
 
-        List<EmployerListingEntity> employerList = HibernateDao.getEmployerListingEntities(email);
+        List<EmployerListingEntity> employerList = hd.getEmployerListingEntities(email);
         loggedInEmployer = employerList.get(0);
 
         model.addAttribute(loggedInEmployer.getContactEmail());
@@ -78,11 +78,11 @@ public class EmployerController {
 public ModelAndView update(Model model, @RequestParam("id") int id) {
     this.id = id;
 
-    Session s = HibernateDao.getSession();
+    Session s = HibernateUtil.getSession();
 
     EmployerListingEntity temp = (EmployerListingEntity) s.get(EmployerListingEntity.class, id);
 
-    List<EmployerListingEntity> userList = HibernateDao.getEmployerListingEntities(temp.getContactEmail());
+    List<EmployerListingEntity> userList = hd.getEmployerListingEntities(temp.getContactEmail());
 
     model.addAttribute("user",loggedInEmployer.getContactEmail());
 
@@ -95,7 +95,7 @@ public ModelAndView update(Model model, @RequestParam("id") int id) {
                                    @RequestParam("contactEmail") String email, @RequestParam("jobDescription") String jDescription,
                                    @RequestParam("crimetype") String cType) {
 
-        Session s = HibernateDao.getSession();
+        Session s = HibernateUtil.getSession();
 
         EmployerListingEntity temp = (EmployerListingEntity) s.get(EmployerListingEntity.class, id);
         temp.setCompany(company);
@@ -111,7 +111,7 @@ public ModelAndView update(Model model, @RequestParam("id") int id) {
         s.getTransaction().commit();
         s.close();
 
-        List<EmployerListingEntity> listResult = HibernateDao.getEmployerListingEntities(email);
+        List<EmployerListingEntity> listResult = hd.getEmployerListingEntities(email);
         model.addAttribute("user",loggedInEmployer.getContactEmail());
 
         return new ModelAndView("employerprofile", "employerProfile", listResult.get(0));
@@ -130,7 +130,7 @@ public ModelAndView update(Model model, @RequestParam("id") int id) {
                                 @RequestParam("contactName") String cName, @RequestParam("contactPhone") String cPhone,
                                 @RequestParam("jobDescription") String jDescription,
                                 @RequestParam("crimetype") String cType){
-    Session s = HibernateDao.getSession();
+    Session s = HibernateUtil.getSession();
 
     EmployerListingEntity addJob = new EmployerListingEntity();
     addJob.setCompany(company);
@@ -148,14 +148,14 @@ public ModelAndView update(Model model, @RequestParam("id") int id) {
 
     model.addAttribute("user",loggedInEmployer.getContactEmail());
 
-        List<EmployerListingEntity> jobList = HibernateDao.getEmployerListingEntities(loggedInEmployer.getContactEmail());
+        List<EmployerListingEntity> jobList = hd.getEmployerListingEntities(loggedInEmployer.getContactEmail());
         return new ModelAndView("success", "successMessage", "Success! Your job has been posted!");
     }
 
 
     @RequestMapping("/viewjoblistings")
     public ModelAndView viewJobListings(Model model){
-        List<EmployerListingEntity> jobList = HibernateDao.getEmployerListingEntities(loggedInEmployer.getContactEmail());
+        List<EmployerListingEntity> jobList = hd.getEmployerListingEntities(loggedInEmployer.getContactEmail());
 
         model.addAttribute("user",loggedInEmployer.getContactEmail());
 
